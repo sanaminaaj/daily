@@ -1,0 +1,49 @@
+.box{
+    width:400px;
+    border: 3px solid gray;
+    padding:10px;
+
+}
+.part1{
+    position: relative;
+    width: 100%;
+
+}
+img{
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: 15px;
+
+}
+.one{
+    border: none;
+    position: absolute;
+    top: 30;
+    left: 40;
+    background-color: gray;
+    color: white;
+    border-radius: 5px;
+}
+.two{
+    color:white;
+    background-color: rgb(33, 14, 241);
+    bottom: 30;
+    position: absolute;
+    left: 10;
+    border-color: rgb(33, 14, 241);
+    border-radius: 3px;
+
+}
+.three{
+    color: gray;
+    background-color: white;
+    position:absolute;
+    bottom: 30;
+    border-color: white;
+    right: 25;
+    border-radius: 5px;
+
+}
+.part2{
+    padding:10px;
+}
