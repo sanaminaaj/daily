@@ -1,0 +1,245 @@
+Entity Class (User.java)
+This represents the User entity stored in the database.
+
+package com.example.demo.model;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String username;
+    private String password;
+    private boolean enabled;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+}
+2. Repository Interface (UserRepository.java)
+Used to retrieve user data from the database.
+
+package com.example.demo.repository;
+
+import com.example.demo.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
+
+3. Custom UserDetails Implementation (MyUserDetails.java)
+Implements UserDetails and converts a User entity to Spring Security's UserDetails object.
+
+package com.example.demo.security;
+
+import com.example.demo.model.User;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MyUserDetails implements UserDetails {
+    private String username;
+    private String password;
+    private List<GrantedAuthority> authorities;
+    private boolean enabled;
+
+    public MyUserDetails(User user) {
+        this.username = user.getUsername();
+        this.password = user.getPassword();
+        this.enabled = user.isEnabled();
+        this.authorities = user.getRoles().stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+}
+4. UserDetailsService Implementation (MyUserDetailsService.java)
+Loads user data from the database.
+package com.example.demo.security;
+
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MyUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return new MyUserDetails(user);
+    }
+}
+5. Spring Security Configuration (SecurityConfig.java)
+Defines authentication and authorization settings.
+package com.example.demo.config;
+
+import com.example.demo.security.MyUserDetailsService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new MyUserDetailsService();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(authProvider);
+    }
+}
+6. Testing with Database Seed Data
+Before running the application, insert sample user data into the database.
+You can use an SQL script like this:
+INSERT INTO users (username, password, enabled) VALUES 
+('user1', '$2a$10$7qL/Jf3ZTQa4Nf6EvAxTIeK3OLQ8NclG/M7D4BIFiMg0.uqXf6ayO', true);
+
+INSERT INTO users_roles (user_id, roles) VALUES 
+(1, 'ROLE_USER');
+
+-- Password is 'password' (hashed using BCrypt)
+7. Usage in a Controller (AuthController.java)
+Example of how to use authentication in a REST API.package com.example.demo.controller;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    private final AuthenticationManager authenticationManager;
+
+    public AuthController(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return "User " + username + " successfully logged in!";
+    }
+}
+Summary
+✔ UserDetails → Represents a user (implements UserDetails).
+✔ UserDetailsService → Loads user details from the database.
+✔ SecurityConfig → Configures authentication and password encoding.
+✔ AuthController → Provides a /login endpoint for testing.
