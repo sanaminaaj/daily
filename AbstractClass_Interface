@@ -1,0 +1,15 @@
+In object-oriented programming, an interface defines a contract of methods that a class must implement, while an abstract class provides a template for subclasses, allowing for both abstract and concrete methods and fields. 
+Abstract Class:
+Purpose: Serves as a blueprint for creating subclasses, providing a common base for related classes and allowing for partial implementation. 
+Methods: Can contain both abstract methods (without implementation) and concrete methods (with implementation). 
+Fields: Can have fields (variables) with various access modifiers, allowing for state to be inherited by subclasses. 
+Inheritance: A class can only inherit from one abstract class. 
+Instantiation: Abstract classes cannot be instantiated. 
+Example: An abstract class Animal could define abstract methods like makeSound() and a concrete method like eat(), which all subclasses of Animal would inherit. 
+Interface:
+Purpose: Defines a contract that classes can implement, specifying what methods a class must provide, without dictating how they're implemented. 
+Methods: Can only contain abstract methods (without implementation). 
+Fields: Can have public, static, and final fields, but cannot have instance fields. 
+Inheritance: A class can implement multiple interfaces. 
+Instantiation: Interfaces cannot be instantiated. 
+Example: An interface Runnable could define a method run(), and any class implementing Runnable would be required to provide an implementation of run(). 
