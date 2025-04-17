@@ -1,0 +1,9 @@
+Specificity Hierarchy
+Every CSS selector has a position in the specificity hierarchy.
+
+Priority	Example	Description
+Inline style	<h1 style="color: pink;">	Highest priority, directly applied with the style attribute
+Id selectors	#navbar	Second highest priority, identified by the unique id attribute of an element
+Classes and pseudo-classes	.test, :hover	Third highest priority, targeted using class names
+Attributes	[type="text"]	Low priority, applies to attributes
+Elements and pseudo-elements	 h1, ::before, ::aft
