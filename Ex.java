@@ -1,4 +1,4 @@
-// Java Program to Reverse a String
+// Java Program to Reverse a Stringh
 // Using for loop
 import java.io.*;
 import java.util.Scanner;
